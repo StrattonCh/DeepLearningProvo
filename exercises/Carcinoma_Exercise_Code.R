@@ -61,16 +61,13 @@ model %>% layer_conv_2d(kernel_size = c(5,5), filters = 8,
           data_format="channels_last") %>%
 layer_batch_normalization() %>%
 layer_max_pooling_2d(pool_size = c(2,2), padding = "same") %>% 
-
 layer_conv_2d(kernel_size = c(5,5), filters = 8,
           strides = 1, activation = "relu", padding = "same", 
-          input_shape = c(width, height, numInputChannels),
           data_format="channels_last") %>%
 layer_batch_normalization() %>%
 layer_max_pooling_2d(pool_size = c(2,2), padding = "same")  %>%
 layer_conv_2d(kernel_size = c(5,5), filters = 8,
           strides = 1, activation = "relu", padding = "same", 
-          input_shape = c(width, height, numInputChannels),
           data_format="channels_last") %>%
 layer_batch_normalization() %>%
 layer_max_pooling_2d(pool_size = c(2,2), padding = "same") %>%
@@ -99,7 +96,7 @@ history <- model %>% fit(
 
 
 
-plot(history)
+plot(history) + theme_bw()
 
 
 
@@ -115,13 +112,11 @@ layer_max_pooling_2d(pool_size = c(2,2), padding = "same") %>%
 
 layer_conv_2d(kernel_size = c(5,5), filters = 8,
           strides = 1, activation = "relu", padding = "same", 
-          input_shape = c(width, height, numInputChannels),
           data_format="channels_last") %>%
 layer_batch_normalization() %>%
 layer_max_pooling_2d(pool_size = c(2,2), padding = "same")  %>%
 layer_conv_2d(kernel_size = c(5,5), filters = 8,
           strides = 1, activation = "relu", padding = "same", 
-          input_shape = c(width, height, numInputChannels),
           data_format="channels_last") %>%
 layer_batch_normalization() %>%
 layer_max_pooling_2d(pool_size = c(2,2), padding = "same") %>%
@@ -147,19 +142,21 @@ history <- model %>% fit(
   x = train_array, y = as.numeric(trainData$y),
   epochs = 100, batch_size = 32, validation_data =
     list(test_array,as.numeric(testData$y)), 
-  callbacks = list(callback_early_stopping(
-           monitor = "val_loss", min_delta = 0, patience = 20), 
-           callback_model_checkpoint(filepath = "carcinoma.hd5",
-           save_best_only = TRUE, save_weights_only = FALSE),
-           callback_reduce_lr_on_plateau(monitor = "val_loss", 
-          factor = 0.25, patience = 5))
+  callbacks = list(
+    callback_early_stopping(
+      monitor = "val_loss", min_delta = 0, patience = 20), 
+    callback_model_checkpoint(filepath = "carcinoma.hd5",
+                              save_best_only = TRUE, save_weights_only = FALSE),
+    callback_reduce_lr_on_plateau(monitor = "val_loss", 
+                                  factor = 0.25, patience = 5)
+  )
 )
 
 bestModel <- load_model_hdf5(filepath = "carcinoma.hd5")
 
 
 
-plot(history)
+plot(history) + theme_bw()
 
 
 
