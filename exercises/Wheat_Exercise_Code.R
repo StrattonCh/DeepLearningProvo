@@ -2,13 +2,12 @@ library(remotes)
 remotes::install_github("dpagendam/deepLearningRshort")
 library(deepLearningRshort)
 #For those using Colab run: install.packages("keras")
-data("wheat")
 
+# prep data
+data("wheat")
 
 dim(trainData_X)
 dim(testData_X)
-
-
 
 rescaleCols <- function(rowX, colMins, colMaxs)
 {
@@ -16,60 +15,33 @@ rescaleCols <- function(rowX, colMins, colMaxs)
   r[is.nan(r)] <- 0
   return(r)
 }
-
-
-
 colMinsX <- apply(trainData_X, 2, min)
 colMaxsX <- apply(trainData_X, 2, max)
-
-
-
-
 trainData_X_scaled <- t(apply(trainData_X, 1, rescaleCols, 
                               colMinsX, colMaxsX))
 testData_X_scaled <- t(apply(testData_X, 1, rescaleCols, 
                              colMinsX, colMaxsX))
-                             
-                             
-                             
-                             
 trainData_Y = matrix(trainData_Y[, "wheatTotalWeight"], ncol = 1)
 testData_Y = matrix(testData_Y[, "wheatTotalWeight"], ncol = 1)
 
-
-
-
 library(keras)
 model <- keras_model_sequential()
-model %>% layer_dense(units = 64, activation = "relu", 
-          input_shape = ncol(trainData_X_scaled)) %>% 
+model %>% layer_dense(units = 64, activation = "relu", input_shape = ncol(trainData_X_scaled)) %>% 
 layer_dense(units = 64, activation = "relu") %>%
 layer_dense(units = 64, activation = "relu") %>% 
 layer_dense(units = 1)
-
-
 
 model %>% compile(
   loss = "mse",
   optimizer = optimizer_rmsprop(learning_rate = 0.0001)
 )
 
-
-
 history <- model %>% fit(
   x = trainData_X_scaled, y = trainData_Y,
   epochs = 30, batch_size = 32, 
   validation_data = list(testData_X_scaled, testData_Y)
 )
-
-
-
-
-plot(history)
-
-
-
-
+plot(history) + theme_bw()
 
 pred_test <- predict(model, testData_X_scaled)
 plot(testData_Y, pred_test, xlab = " True Plant Biomass (kg/ha)",
@@ -93,9 +65,7 @@ negLL_logNormal <- function(y_true, y_pred)
   sigma <- K$exp(K$dot(y_pred, sigmaMask))
   
   # Use mu and sigma as parameters describing log-normal distributions
-  logLike <- -1*(K$log(y_true) + K$log(sigma)) -
-  0.5*K$log(2*pi) -
-  K$square(K$log(y_true) - mu)/(2*K$square(sigma))
+  logLike <- -1*(K$log(y_true) + K$log(sigma)) - 0.5*K$log(2*pi) - K$square(K$log(y_true) - mu)/(2*K$square(sigma))
   -1*(K$sum(logLike, axis = 1L))
 }
 
@@ -111,17 +81,10 @@ layer_dense(units = 64, activation = "relu") %>%
 layer_dense(units = 64, activation = "relu") %>% 
 layer_dense(units = 2)
 
-
-
-
-
 model %>% compile(
   loss = negLL_logNormal,
   optimizer = optimizer_rmsprop(learning_rate = 0.0001)
 )
-
-
-
 
 history <- model %>% fit(
   x = trainData_X_scaled, y = trainData_Y,
@@ -130,12 +93,7 @@ history <- model %>% fit(
   callbacks = list(callback_reduce_lr_on_plateau(monitor = "val_loss",
               factor = 0.25, patience = 5))
 )
-
-
-
-
-
-plot(history)
+plot(history) + theme_bw()
 
 
 
